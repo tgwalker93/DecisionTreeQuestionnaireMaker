@@ -1,0 +1,40 @@
+
+html {
+    position: relative;
+    min-height: 100%;
+  }
+  
+body {
+    font-family: 'Gotham';
+
+  }
+.logoutButton {
+  float:right !important;
+  margin-bottom: 10px !important;
+}
+.help-block {
+    color: red !important;   
+    font-size:18px;
+}
+
+.jumbotron {
+  background-color: #d2ecd1 !important;
+}
+
+.formFooterLink:hover {
+    cursor:pointer !important;
+    color:blue !important;
+}
+  
+#questionModalXButton {
+    line-height: 19px;
+    background-color: #fe0000 !important;
+    margin-top: 1px;
+    margin-right: 2px;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+  
+

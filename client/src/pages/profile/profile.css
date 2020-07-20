@@ -1,0 +1,32 @@
+#questionnaireTable_head {
+    background-color: gray;
+}
+
+.questionnaireTable_td {
+    background-color: lightgray;
+}
+
+
+.questionnaireTable_Table, .questionnaireTable_th, .questionnaireTable_td {
+      border: 1px solid black !important;
+          text-align: center;
+}
+
+#noResultsHeader {
+    text-align: center;
+
+}
+#confirmationHeader {
+    text-align: center !important;
+    color: black !important;
+}
+
+#questionnaireTable_head {
+    font-size: 20px !important;
+}
+#questionnaireNameColumn, #questionnaireIDColumn {
+    font-size: 20px !important;
+}
+#viewQuestionColumn {
+    width: 50px !important;
+}
