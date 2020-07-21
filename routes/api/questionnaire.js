@@ -123,6 +123,29 @@ app.get("/getAllQuestionnairesOfUser/:mongoID", function (req, res) {
         });
 });
 
+//Get questionnaire from DB
+app.get("/getQuestionnaireFromDB/:questionnaireID", function (req, res) {
+    console.log("im in the get!!");
+    // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
+    Questionnaire.findOne({ "questionnaireID": req.params.questionnaireID })
+        // ..and populate all of the bug comments associated with it
+        .populate("questions")
+        // now, execute our query
+        .exec(function (error, doc) {
+            // Log any errors
+            if (error) {
+                console.log(error);
+                res.json(error);
+            }
+            // Otherwise, send the doc to the browser as a json object
+            else {
+                console.log("Success!!");
+                console.log(doc);
+                res.json(doc);
+            }
+        });
+});
+
 
 //attach user to questionnaire
 app.post("/attachUserToQuestionnaire", function (req, res) {

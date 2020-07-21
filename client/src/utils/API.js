@@ -36,6 +36,11 @@ export default {
 
 
     // questionnaire CALLS TO DB ------
+    getQuestionnaireFromDB: function(questionnaireObj){
+        console.log("hi");
+        console.log(questionnaireObj);
+        return axios.get("/api/questionnaire/getQuestionnaireFromDB/" + questionnaireObj.questionnaireID);
+    },
     saveQuestionnaireInDB: function(userData) {
         return axios.post("/api/questionnaire/saveQuestionnaire", userData);
     },

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { BrowserRouter as Router, Route, Switch, Redirect } from "react-router-dom";
 import LandingPage from "./pages/landing-page";
 import CreateQuestionnairePage from "./pages/create-questionnaire";
+import AnswerQuestionnairePage from "./pages/answer-questionnaire";
 import Profile from "./pages/profile";
 import API from "./utils/API";
 
@@ -129,7 +130,11 @@ class App extends Component {
             <Redirect to="/landing-page" />
           )} />
 
-          <Redirect from="*" to="/landing-page" />
+          <Route exact path="/answer-questionnaire/:questionnaireID" render={(props) => (
+            <AnswerQuestionnairePage {...props}></AnswerQuestionnairePage>
+          )} />
+
+          {/* <Redirect from="*" to="/landing-page" /> */}
 
         </div>
       </div>
@@ -138,4 +143,3 @@ class App extends Component {
 
 }
 export default App;
-// export default App;
