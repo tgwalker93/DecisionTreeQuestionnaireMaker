@@ -6,7 +6,7 @@ import API from "../../utils/API";
 import { Link } from "react-router-dom";
 import Modal from "react-bootstrap/Modal";
 
-class CreateQuestionnairePage extends Component {
+class ViewQuestionnairePage extends Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -15,7 +15,7 @@ class CreateQuestionnairePage extends Component {
             isLogin: true,
             isNewQuestion: false,
             selectedQuestion: "",
-            currentModalTitle: "Edit Question",
+            currentModalTitle: "View Question",
             currentQuestionIndex: 0,
             currentCompletedQuestionIndex: 0,
             showModal: false,
@@ -64,7 +64,7 @@ class CreateQuestionnairePage extends Component {
             formErrors: fieldValidationErrors,
             questionTextValid: questionTextValid
         }, () => {
-            this.updateOrCreateQuestion();
+            this.closeModal();
         });
 
 
@@ -91,9 +91,7 @@ class CreateQuestionnairePage extends Component {
 
     //************************** DB METHODS ************** THESE METHODS SAVE, EDIT, GET BUGS FROM DB *******************************************
     saveNewQuestionInDB = () => {
-
         var questionObj = {
-            questionID: this.state.questionData.length,
             questionnaireMongoID: this.state.questionnaireMongoID,
             questionText: this.state.questionTextInModal,
         }
@@ -117,24 +115,8 @@ class CreateQuestionnairePage extends Component {
             })
     }
 
-    updateQuestionInDB = () => {
-        API.updateQuestion(this.state.selectedQuestion)
-            .then(response => {
-
-                if (!response.data.error) {
-
-                    this.setState({ showModal: false });
-
-                    this.forceUpdate();
-                } else {
-                    this.setState({ errorResponse: response })
-                }
-            })
-    }
-
-
     getQuestionsFromDB() {
-        console.log("I'm in getQuestions from DB  --- " + this.state.questionnaireMongoDB);
+        console.log("I'm in getQuestions from DB  --- " + this.state.questinnaireMongoID);
         API.getAllQuestions(this.state.questionnaireMongoID)
             .then(response => {
                 if (!response.data.error) {
@@ -165,49 +147,6 @@ class CreateQuestionnairePage extends Component {
 
     }
 
-    deleteQuestionInDB(questionClickedOn) {
-        questionClickedOn.questionMongoID = questionClickedOn.mongoID;
-        questionClickedOn.questionnaireMongoID = this.state.questionnaireMongoID;
-        API.deleteQuestion(questionClickedOn)
-            .then(response => {
-
-                if (!response.data.error) {
-
-                    if (response.data.deletedQuestionDoc.deletedCount > 0) {
-                        //Removing the question from the UI
-                        const index = this.state.questionData.indexOf(questionClickedOn);
-                        if (index > -1) {
-                            this.state.questionData.splice(index, 1);
-                        }
-                        this.adjustQuestionDataOrder();
-                    }
-
-                    this.forceUpdate();
-                } else {
-                    this.setState({ errorResponse: response })
-                }
-            })
-    }
-
-
-
-
-    //************************THESE METHODS ARE CALLED FROM BUTTONS WITHIN THE MODAL*********************
-    updateOrCreateQuestion = () => {
-        if (!this.state.questionTextValid) {
-            return;
-        }
-        if (this.state.isNewQuestion) {
-            this.saveNewQuestionInDB();
-        } else {
-            var newQuestionData = this.state.questionData;
-            //UPDATE THE BUG DATA LOCALLY BEFORE PUSHING TO DB
-            newQuestionData[this.state.currentQuestionIndex].questionText = this.state.questionTextInModal;
-
-            this.setState({ selectedQuestion: this.state.questionData[this.state.currentQuestionIndex], questionData: newQuestionData });
-            this.updateQuestionInDB();
-        }
-    }
     closeModal = () => {
         this.setState({
             showModal: false, questionTextInModal: "", currentQuestionCommentInModal: "",
@@ -234,7 +173,7 @@ class CreateQuestionnairePage extends Component {
     }
 
     createNewQuestionButton = () => {
-        this.setState({ showModal: true, currentModalTitle: "Create Question", isNewQuestion: true, questionTextInModal: ""});
+        this.setState({ showModal: true, currentModalTitle: "Create Question", isNewQuestion: true, questionTextInModal: "" });
     }
     handleLogoutButtonClick = () => {
         window.location.reload(false);
@@ -245,21 +184,11 @@ class CreateQuestionnairePage extends Component {
 
     //CALLS THIS WHEN THE COMPONENT MOUNTS, basically "on page load"
     componentDidMount() {
-        // var questionnaireUsersArray = [];
-        // for (var i = 0; i < this.props.location.state.questionnaireUsers.length; i++) {
-        //     questionnaireUsersArray.push(
-        //         {
-        //             text: this.props.location.state.questionnaireUsers[i],
-        //             id: i
-        //         }
-        //     )
-        // }
-        //Grab props that were set from profile page and set them to state for easier access.
         this.setState({
             questionnaireMongoID: this.props.location.state.questionnaireMongoID, questionnaireNameInTitle: this.props.location.state.questionnaireName,
             userFirstName: this.props.location.state.userFirstName, userLastName: this.props.location.state.userLastName
         }, () => {
-             this.getQuestionsFromDB();
+            this.getQuestionsFromDB();
         });
 
 
@@ -310,84 +239,10 @@ class CreateQuestionnairePage extends Component {
         });
 
     }
+    
     render() {
 
 
-
-        //FIRST WE FILTER THE NON COMPLETED BUGS
-        if (this.state.userFilter !== "" || this.state.statusFilter !== "") {
-            this.state.filteredQuestionData = [];
-            this.state.questionData.map(question => {
-
-                var assigneeFilterIsActive = false;
-                var statusFilterIsActive = false;
-                //APPLY THE FILTERS
-                if (this.state.statusFilter === question.status && this.state.statusFilter !== "") {
-
-                    statusFilterIsActive = true;
-                }
-                if (this.state.userFilter === question.userAssigned && this.state.userFilter !== "") {
-                    assigneeFilterIsActive = true;
-                }
-                if (statusFilterIsActive && assigneeFilterIsActive && !question.isCompleted) {
-                    return this.state.filteredQuestionData.push(question);
-                } else if (statusFilterIsActive && this.state.userFilter === "" && !question.isCompleted) {
-
-                    return this.state.filteredQuestionData.push(question);
-                }
-                else if (assigneeFilterIsActive && this.state.statusFilter === "" && !question.isCompleted) {
-                    return this.state.filteredQuestionData.push(question);
-                }
-            });
-        } else {
-            this.state.filteredQuestionData = [];
-            this.state.questionData.map(question => {
-                if (!question.isCompleted) {
-                    return this.state.filteredQuestionData.push(question);
-                }
-
-            });
-
-        }
-
-
-
-
-        // NOW WE WILL DO THE SAME LOGIC FOR COMPLETED BUGS
-        if (this.state.userFilter !== "" || this.state.statusFilter !== "") {
-            this.state.filteredCompletedQuestionData = [];
-            this.state.questionData.map(question => {
-
-                var assigneeFilterIsActive = false;
-                var statusFilterIsActive = false;
-                //APPLY THE FILTERS
-                if (this.state.statusFilter === question.status && this.state.statusFilter !== "") {
-
-                    statusFilterIsActive = true;
-                }
-                if (this.state.userFilter === question.userAssigned && this.state.userFilter !== "") {
-                    assigneeFilterIsActive = true;
-                }
-                if (statusFilterIsActive && assigneeFilterIsActive && question.isCompleted) {
-                    return this.state.filteredCompletedQuestionData.push(question);
-                } else if (statusFilterIsActive && this.state.userFilter === "" && question.isCompleted) {
-
-                    return this.state.filteredCompletedQuestionData.push(question);
-                }
-                else if (assigneeFilterIsActive && this.state.statusFilter === "" && question.isCompleted) {
-                    return this.state.filteredCompletedQuestionData.push(question);
-                }
-            });
-        } else {
-            this.state.filteredCompletedQuestionData = [];
-            this.state.questionData.map(question => {
-                if (question.isCompleted) {
-                    return this.state.filteredCompletedQuestionData.push(question);
-                }
-
-            });
-
-        }
         return (
             <Container id="containerViewQuestions" fluid="true">
                 <Link to={{ pathname: "/landing-page", state: { userFirstName: this.state.userFirstName, userLastName: this.state.userLastName } }} className="logoutButton"><Button id="logoutButton" onClick={this.handleLogoutButtonClick.bind(this)}>Logout</Button> </Link>
@@ -396,7 +251,7 @@ class CreateQuestionnairePage extends Component {
                         <div className="jumbotron jumbotron-fluid">
                             <Container id="container" fluid="true">
                                 <h1 className="display-4 QuestiontrackerTitle" id="questionnaireTitle">{this.state.questionnaireNameInTitle}</h1>
-                                <h2 className="display-4 QuestionTrackerTitle">Edit Questions</h2>
+                                <h2 className="display-4 QuestionTrackerTitle">View Questions</h2>
                             </Container>
                         </div>
                         <br />
@@ -404,9 +259,6 @@ class CreateQuestionnairePage extends Component {
                         <Row>
                             <Col size="sm-2">
                                 <Link to="/profile" className="log" ><Button>View Profile</Button></Link>
-                            </Col>
-                            <Col size="sm-2">
-                                <Button type="button" className="btn btn-primary" onClick={this.createNewQuestionButton}>Create New Question</Button>
                             </Col>
 
                         </Row>
@@ -419,8 +271,6 @@ class CreateQuestionnairePage extends Component {
                                         <thead id="questionViewTable_head" className="thead-dark">
                                             <tr>
                                                 <th className="questionViewTable_th" scope="col">Question</th>
-                                                <th className="questionViewTable_th" scope="col"></th>
-                                                <th className="questionViewTable_th" scope="col"></th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -428,12 +278,6 @@ class CreateQuestionnairePage extends Component {
                                                 return (
                                                     <tr className="questionViewTable_tr" key={question.mongoID}>
                                                         <td id="titleColumn" className="questionViewTable_td">{question.questionText}</td>
-                                                        <td id="editColumn" className="questionViewTable_td">
-                                                            <Button variant="primary" onClick={() => this.editQuestionButton(question)}>
-                                                                Edit
-                                                                        </Button>
-                                                        </td>
-                                                        <td id="deleteColumn" className="questionViewTable_td"> <Button variant="primary" onClick={() => this.deleteQuestionButton(question)}>Delete</Button></td>
                                                     </tr>
                                                 )
 
@@ -491,7 +335,9 @@ class CreateQuestionnairePage extends Component {
 
             </Container>
         );
+
     }
+
 }
 
-export default CreateQuestionnairePage;
+export default ViewQuestionnairePage;

@@ -79,13 +79,33 @@ app.post("/updateQuestionnaire", function (req, res) {
         upsert: false
     }
 
-    let update = {
+    var update = {
         name: req.body.questionnaireName,
         questionnaireID: req.body.questionnaireID
-    };
+    }
+
+    var newArray = [];
+    console.log(req.body.questions);
+    for(var i=0; i<req.body.questions.length;i++){
+        newArray.push(req.body.questions[i]._id);
+    }
+
+    console.log("new array");
+    console.log(newArray);
+
+    if (req.body.isFromAnswerQuestionnaire) {
+        console.log("IS FROME ANSWER QQQ!!!");
+
+        update = {
+            $set: {
+                questions:newArray
+            }
+        }
+    }
 
     Questionnaire
         .findOneAndUpdate(filter, update, options)
+        .populate("questions")
         .then(function (doc, error) {
             // Log any errors
             if (error) {
@@ -94,7 +114,21 @@ app.post("/updateQuestionnaire", function (req, res) {
             }
             // Or send the doc to the browser as a json object
             else {
-                res.json(doc);
+                console.log("success?");
+                console.log(doc);
+                if (req.body.isFromAnswerQuestionnaire) {
+                    for(var i=0;i<req.body.questions.length;i++){
+                        doc.questions[req.body.questions[i].questionID].answerHistory = req.body.questions[i].answerHistory;
+                    }
+                     doc.save(function(err){
+                         if(!err){
+                             console.log("SUCCESS!!!!");
+                             res.json(doc);
+                         }
+                     })
+                } else {
+                    res.json(doc);
+                }
             }
         })
         .catch(err => res.status(422).json(err));
@@ -125,7 +159,6 @@ app.get("/getAllQuestionnairesOfUser/:mongoID", function (req, res) {
 
 //Get questionnaire from DB
 app.get("/getQuestionnaireFromDB/:questionnaireID", function (req, res) {
-    console.log("im in the get!!");
     // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
     Questionnaire.findOne({ "questionnaireID": req.params.questionnaireID })
         // ..and populate all of the bug comments associated with it
@@ -134,13 +167,10 @@ app.get("/getQuestionnaireFromDB/:questionnaireID", function (req, res) {
         .exec(function (error, doc) {
             // Log any errors
             if (error) {
-                console.log(error);
                 res.json(error);
             }
             // Otherwise, send the doc to the browser as a json object
             else {
-                console.log("Success!!");
-                console.log(doc);
                 res.json(doc);
             }
         });

@@ -6,13 +6,15 @@ import API from "../../utils/API";
 import { Link } from "react-router-dom";
 import Modal from "react-bootstrap/Modal";
 
-class CreateQuestionnairePage extends Component {
+class AnswerQuestionnairePage extends Component {
     constructor(props) {
         super(props)
         this.state = {
             questionnaireID: this.props.match.params.questionnaireID,
             questionnaireName: "",
-            questions: []
+            test:"",
+            questions: [],
+            errorResponse: null
         };
 
     }
@@ -36,10 +38,16 @@ class CreateQuestionnairePage extends Component {
                         console.log(response);
 
                         if(response.data.questions !== null){
+                            for(var i=0; i<response.data.questions.length; i++){
+                                var answerKey = {  }
+                                answerKey["answer"+response.data.questions[i].questionID] = ""
+                                this.setState(answerKey)
+                            }
+                            console.log(response.data);
                             this.setState({
                                 questionnaireData: response.data,
                                 questionnaireName: response.data.name,
-                                questions: response.data.questions,
+                                questions: response.data.questions
                             })
                         }
 
@@ -70,8 +78,37 @@ class CreateQuestionnairePage extends Component {
         this.setState({ [attribute]: event.target.value.trim() })
     }
 
-    saveQuestionnaireInDB = () => {
-        
+    updateQuestionnaireInDB = () => {
+
+        console.log("UPDATE QUESTIONS!!");
+
+        for(var i=0; i<this.state.questionnaireData.questions.length; i++){
+            var currentQuestion = this.state.questionnaireData.questions[i];
+            //Adding to the history of answers for a specific question!
+            currentQuestion.answerHistory.push(this.state["answer"+currentQuestion.questionID]);
+        }
+        this.state.questionnaireData["isFromAnswerQuestionnaire"] = true;
+        this.state.questionnaireData["questionnaireMongoID"] = this.state.questionnaireData._id;
+        this.state.questionnaireData["questionnaireName"] = this.state.questionnaireData.name;
+        console.log(this.state.questionnaireData);
+        API.updateQuestionnaireInDB(this.state.questionnaireData)
+            .then(response => {
+                console.log("test 123");
+                console.log(response);
+                if (response.data) {
+                    if(response.data.error){
+                        return;
+                    }
+                    this.setState({ 
+                        questionnaireData: response.data,
+                        questionnaireName: response.data.name,
+                        questions: response.data.questions
+                    });
+                } else {
+                    this.setState({ errorResponse: response })
+                }
+            })
+
     }
 
     handleFormSubmit = event => {
@@ -80,8 +117,6 @@ class CreateQuestionnairePage extends Component {
     };
 
     render() {
-
-
         return (
             <Container id="containerViewQuestions" fluid="true">
                 <Row id="mainRow">
@@ -94,21 +129,20 @@ class CreateQuestionnairePage extends Component {
                         
                         <div>
                             <form>
-                                {this.state.questions.map(question => {
+                                    {this.state.questions.map((question, i) => {
                                     return (
                                         <div>
-                                        {/* <label htmlFor="questionHTML">{question.questionText} </label> */}
                                             <h3>{question.questionText}</h3>
-                                            <select value={this.state.userFilter} onChange={this.handleChange.bind(this)} id="questionHTML" name="questionHTML">
+                                            <select key={i} value={this.state["answer"+question.questionID]} onChange={this.handleChange.bind(this)} id={"answer" + question.questionID} name={"answer" + question.questionID}>
+                                            <option className="dropdown-item" href="#" value=""></option>
                                             <option className="dropdown-item" href="#" value="Yes">Yes</option>
-                                            <option className="dropdown-item" href="#" value="No">No</option>
-                                            }
-                                        </select>
+                                            <option className="dropdown-item" href="#" value="No">No</option>       
+                                            </select> 
                                         </div>
                                     )
-                                })}
+                                })} 
                             </form>
-                            <Button type="button" className="btn btn-primary" onClick={this.saveQuestionnaireInDB}>Submit</Button>
+                                <Button type="button" className="btn btn-primary" onClick={this.updateQuestionnaireInDB}>Submit</Button>
                         </div>
                         
                         : ""}
@@ -123,4 +157,4 @@ class CreateQuestionnairePage extends Component {
     
 }
 
-export default CreateQuestionnairePage;
+export default AnswerQuestionnairePage;

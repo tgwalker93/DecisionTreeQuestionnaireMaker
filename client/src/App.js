@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Switch, Redirect } from "react-router-d
 import LandingPage from "./pages/landing-page";
 import CreateQuestionnairePage from "./pages/create-questionnaire";
 import AnswerQuestionnairePage from "./pages/answer-questionnaire";
+import ViewQuestionnairePage from "./pages/view-questionnaire";
 import Profile from "./pages/profile";
 import API from "./utils/API";
 
@@ -102,6 +103,7 @@ class App extends Component {
                   serverErrorMessage={this.state.serverErrorMessage}
                 />} />
             <Route exact path="/create-questionnaire" component={CreateQuestionnairePage} />
+            <Route exact path="/view-questionnaire" component={ViewQuestionnairePage} />
             <Route exact path="/profile" render={() => <Profile loggedIn={this.state.loggedIn} username={this.state.username} mongoID={this.state.mongoID} firstName={this.state.firstName} lastName={this.state.lastName} />} />
 
             <Route exact path="/" render={() => (

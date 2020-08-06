@@ -108,11 +108,8 @@ app.post("/updateQuestion", function (req, res) {
     }
 
     let update = {
-        questionTitle: req.body.questionTitle,
-        questionDescription: req.body.questionDescription,
-        userAssigned: req.body.userAssigned,
-        status: req.body.status,
-        isCompleted: req.body.isCompleted
+        questionText: req.body.questionText,
+        questionID: req.body.id
     };
 
     Question
@@ -139,6 +136,7 @@ app.post("/updateQuestion", function (req, res) {
 //Save a question to the Database! 
 app.post("/saveQuestion", function (req, res) {
     var resultObj = {
+        questionID: req.body.questionID,
         questionText: req.body.questionText
 
     };

@@ -41,8 +41,8 @@ export default {
         console.log(questionnaireObj);
         return axios.get("/api/questionnaire/getQuestionnaireFromDB/" + questionnaireObj.questionnaireID);
     },
-    saveQuestionnaireInDB: function(userData) {
-        return axios.post("/api/questionnaire/saveQuestionnaire", userData);
+    saveQuestionnaireInDB: function(questionnaireData) {
+        return axios.post("/api/questionnaire/saveQuestionnaire", questionnaireData);
     },
     getQuestionnairesOfUserInDB: function(userData){
         console.log("i'm in API!!!");

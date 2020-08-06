@@ -5,15 +5,18 @@ var Schema = mongoose.Schema;
 
 // Create the Note schema
 var QuestionSchema = new Schema({
+    questionID: {
+        type: Number  
+    },
     questionText: {
         type: String
     },
     answer: {
         type: Boolean
     },
-    answerHistory: {
-        type: Array
-    }
+    answerHistory: [{
+        type: String
+    }]
 });
 
 // Remember, Mongoose will automatically save the ObjectIds of the comments

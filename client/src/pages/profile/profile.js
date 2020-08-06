@@ -392,6 +392,7 @@ class Profile extends Component {
                                         <th className="questionnaireTable_th" scope="col"></th>
                                         <th className="questionnaireTable_th" scope="col"></th>
                                         <th className="questionnaireTable_th" scope="col"></th>
+                                        <th className="questionnaireTable_th" scope="col"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -404,6 +405,10 @@ class Profile extends Component {
                                                     
                                                     <Link to={{pathname: "/create-questionnaire", state: {questionnaireMongoID: questionnaire._id, questionnaireName: questionnaire.name, questionnaireUsers: questionnaire.users, userFirstName: this.state.userFirstName, userLastName: this.state.userLastName}}} className="log" ><Button>Edit Questions</Button></Link>
                                                     </td>
+                                                <td id="viewQuestionColumn" className="questionnaireTable_td">
+
+                                                    <Link to={{ pathname: "/view-questionnaire", state: { questionnaireMongoID: questionnaire._id, questionnaireName: questionnaire.name, questionnaireUsers: questionnaire.users, userFirstName: this.state.userFirstName, userLastName: this.state.userLastName } }} className="log" ><Button>View Questionnaire Decision Tree</Button></Link>
+                                                </td>
                                                 <td id="editColumn" className="questionnaireTable_td">
                                                     {this.props.mongoID === questionnaire.userWhoCreatedOrgMongoID ?
                                                         <Button variant="primary" onClick={() => this.handleEditQuestionnaireButtonClick(questionnaire)}>
