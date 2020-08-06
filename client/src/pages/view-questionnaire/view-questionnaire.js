@@ -4,7 +4,9 @@ import { Input, Button, TextArea } from "../../components/Form";
 import API from "../../utils/API";
 // import "./create-questionnaire.css";
 import { Link } from "react-router-dom";
+import Tree from 'react-d3-tree';
 import Modal from "react-bootstrap/Modal";
+
 
 class ViewQuestionnairePage extends Component {
     constructor(props) {
@@ -37,7 +39,52 @@ class ViewQuestionnairePage extends Component {
             userLastName: "",
             showActiveQuestions: true,
             showCompletedQuestions: false,
-            isCurrentQuestionCompleted: false
+            isCurrentQuestionCompleted: false,
+            treeData: [
+                {
+                    name: 'Top Level',
+                    attributes: {
+                        keyA: 'val A',
+                        keyB: 'val B',
+                        keyC: 'val C',
+                    },
+                    children: [
+                        {
+                            name: 'Level 2: A',
+                            attributes: {
+                                keyA: 'val A',
+                                keyB: 'val B',
+                                keyC: 'val C',
+                            },
+                            children: [{
+                                name: 'Level 3: A',
+                                attributes: {
+                                    keyA: 'val A',
+                                    keyB: 'val B',
+                                    keyC: 'val C',
+                                }
+                            },
+                             {
+                                    name: 'Level 3: A',
+                                    attributes: {
+                                        keyA: 'val A',
+                                        keyB: 'val B',
+                                        keyC: 'val C',
+                                    }
+                            },
+                        ]
+                        },
+                        {
+                            name: 'Level 2: B',
+                            attributes: {
+                                keyA: 'val A',
+                                keyB: 'val B',
+                                keyC: 'val C',
+                            },
+                        },
+                    ],
+                },
+            ]
         };
 
     }
@@ -90,30 +137,6 @@ class ViewQuestionnairePage extends Component {
 
 
     //************************** DB METHODS ************** THESE METHODS SAVE, EDIT, GET BUGS FROM DB *******************************************
-    saveNewQuestionInDB = () => {
-        var questionObj = {
-            questionnaireMongoID: this.state.questionnaireMongoID,
-            questionText: this.state.questionTextInModal,
-        }
-
-        API.saveQuestion(questionObj)
-            .then(response => {
-
-                if (!response.data.error) {
-
-                    questionObj.mongoID = response.data.questionDoc._id;
-                    questionObj.newMongoID = response.data.questionDoc._id;
-                    questionObj.id = this.state.currentQuestionIndex;
-                    questionObj.isCompleted = response.data.isCompleted;
-
-                    this.setState({ showModal: false });
-                    this.state.questionData.push(questionObj);
-                    this.forceUpdate();
-                } else {
-                    this.setState({ errorResponse: response })
-                }
-            })
-    }
 
     getQuestionsFromDB() {
         console.log("I'm in getQuestions from DB  --- " + this.state.questinnaireMongoID);
@@ -122,6 +145,8 @@ class ViewQuestionnairePage extends Component {
                 if (!response.data.error) {
                     var questions = [];
                     var questionArrayFromDB = response.data.questionnaireDoc.questions;
+                    console.log("QUESTIONS CAME IN!");
+                    console.log(questionArrayFromDB);
                     //Loop through question data received from the server.
                     for (var i = 0; i < questionArrayFromDB.length; i++) {
                         questions.push({
@@ -140,10 +165,162 @@ class ViewQuestionnairePage extends Component {
                     //At default, we want to show all questions in the table
                     this.putAllQuestionsIntoFilteredArray();
                     this.forceUpdate();
+
+                    //Lastly, we create our decision tree!
+                    this.createDecisionTree(response.data.questionnaireDoc.answerHistoryQuestionnaire);
+
                 } else {
                     this.setState({ errorResponse: response })
                 }
             }).catch(err => console.log(err));
+
+    }
+
+    createDecisionTree(localAnswerHistoryQuestionnaire) {
+
+    
+    var newTreeData = [
+             {
+            //     name: 'Top Level',
+            //     attributes: {
+            //         keyA: 'val A',
+            //         keyB: 'val B',
+            //         keyC: 'val C',
+            //     },
+            //     children: [
+            //         {
+            //             name: 'Level 2: A',
+            //             attributes: {
+            //                 keyA: 'val A',
+            //                 keyB: 'val B',
+            //                 keyC: 'val C',
+            //             },
+            //         },
+            //         {
+            //             name: 'Level 2: B',
+            //         },
+            //     ],
+             }
+        ]
+
+      if(!localAnswerHistoryQuestionnaire){
+          return;
+      }
+      var probabilityData = {};
+        var currentID = "";
+        var questionCount = 1;
+        for (var i = 0; i < localAnswerHistoryQuestionnaire.length; i++) {
+            for (var j = 0; j < localAnswerHistoryQuestionnaire[i].answersArr.length; j++){
+                currentID += (questionCount + localAnswerHistoryQuestionnaire[i].answersArr[j].questionAnswer)
+            }
+            if (probabilityData.hasOwnProperty(currentID)) {
+                probabilityData[currentID].count += 1;
+            } else {
+                probabilityData[currentID] = {
+                     count: 1,
+                }
+            }
+        }
+
+
+        var probabilityKeys = Object.keys(probabilityData);
+        var probabilityValues = Object.values(probabilityData);
+        var currentYesCount = 0;
+        var currentNoCount = 0;
+        var current1YesString = "1Yes";
+        var current1NoString = "1No";
+
+        for (var x = 0; x < probabilityKeys.length; x++){
+            if (probabilityKeys[x].includes(current1YesString)) {
+                currentYesCount += 1;
+            }
+            if (probabilityKeys[x].includes(current1NoString)){
+                currentNoCount += 1;
+            }
+        }
+
+        if (localAnswerHistoryQuestionnaire){
+            newTreeData[0] = {
+                name: localAnswerHistoryQuestionnaire[0].answersArr[0].questionText,
+                attributes: {
+                    Yes: currentYesCount,
+                    No: currentNoCount,
+                    // YesProbability: currentYesCount / (localAnswerHistoryQuestionnaire[0].answersArr.length)*100+"%",
+                    // NoProbability: currentNoCount / (localAnswerHistoryQuestionnaire[0].answersArr.length)*100+"%",
+                },
+                children: [
+
+                ],
+            };
+        }
+
+        var treeDepth = 1;
+        var currentDataTree = newTreeData[0];
+        var howManyQuestionsThereAre = localAnswerHistoryQuestionnaire[0].answersArr.length;
+        var currentCount = 1;
+        var currentIDString = "";
+        var currentChild = "newTreeData[0].children";
+        for (var k = 1; k < howManyQuestionsThereAre; k++) {
+            treeDepth = treeDepth * 2;
+            for (var l = 0; l < treeDepth; l++) {
+                currentIDString += currentCount + localAnswerHistoryQuestionnaire[k].answersArr[l].questionAnswer;
+
+            }
+
+            if (probabilityKeys.includes(currentIDString)) {
+
+                var totalCount = 0;
+                var totalStringCount = currentIDString.length;
+                for (var x = 0; x < probabilityKeys.length; x++) {
+                    if (probabilityKeys[x].length <= totalStringCount) {
+                        totalCount += 1;
+                    }
+                    
+                }
+                
+                eval(currentChild).push({
+                    name: localAnswerHistoryQuestionnaire[0].answersArr[0].questionText,
+                    attributes: {
+                        Yes: 0,
+                        No: 0,
+                        probability: probabilityValues[probabilityKeys.indexOf[currentIDString]].count / (totalCount) * 100 + "%",
+                    },
+                    children: [
+
+                    ],
+                })
+
+               currentChild += "["+l+"].currentChild";
+                
+            }
+        }
+
+
+        this.setState({
+            treeData: newTreeData
+        })
+
+
+
+    //   for (var i = 0; i < questions.length; i++) {
+    //       probabilityData[i].push({
+    //           questionText: questions[i].questionText,
+    //           yesCount: 0,
+    //           noCount: 0          
+    //         });
+    //         for(var j=0; j< questions[i].answerHistory.length; j++){
+    //             if (questions[i].answerHistory[j] = "Yes"){
+    //                 probabilityData[i].yesCount += 1;
+    //             } 
+    //             if(questions[i].answerHistory[j] = "No"){
+    //                 probabilityData[i].noCount += 1;
+    //             }
+    //         }
+    //     }
+
+    }
+
+    calculateYesCount(){
 
     }
 
@@ -157,24 +334,6 @@ class ViewQuestionnairePage extends Component {
 
 
     // ******************** THESE METHODS ARE CALLED WHEN CREATE/EDIT BUTTONS ARE FIRST CLICKED ******************
-    editQuestionButton(questionClickedOn) {
-        this.adjustQuestionDataOrder()
-        this.setState({
-            showModal: true,
-            currentModalTitle: "Edit Question",
-            currentQuestionIndex: questionClickedOn.id,
-            questionTextInModal: questionClickedOn.questionText,
-            isNewQuestion: false,
-            selectedQuestion: questionClickedOn
-        });
-    }
-    deleteQuestionButton(questionClickedOn) {
-        this.deleteQuestionInDB(questionClickedOn);
-    }
-
-    createNewQuestionButton = () => {
-        this.setState({ showModal: true, currentModalTitle: "Create Question", isNewQuestion: true, questionTextInModal: "" });
-    }
     handleLogoutButtonClick = () => {
         window.location.reload(false);
     }
@@ -263,6 +422,12 @@ class ViewQuestionnairePage extends Component {
 
                         </Row>
 
+                        <div id="treeWrapper" style={{ width: '50em', height: '50em' }}>
+
+                            <Tree data={this.state.treeData} orientation="vertical"/>
+
+                        </div>
+
                         {this.state.showActiveQuestions ?
                             <div>
                                 <h1 className="activeQuestionsTitle">Active Questions</h1>
@@ -300,35 +465,6 @@ class ViewQuestionnairePage extends Component {
 
                         <br />
                         <br />
-
-
-
-
-                        {/* This modal will pop up for editing questions! */}
-                        <Modal show={this.state.showModal} animation={false}>
-                            <Modal.Header>
-                                <Button className='btn btn-danger note-delete xButton' id="questionModalXButton" onClick={() => this.closeModal()}>X</Button>
-                                <Modal.Title><h3>{this.state.currentModalTitle}</h3></Modal.Title>
-                            </Modal.Header>
-                            <Modal.Body>
-
-                                <br />
-
-                                <Input label="Enter your question below:" onBlur={this.formatInput.bind(this)} value={this.state.questionTextInModal} id="questionTextInModal" onChange={this.handleChange.bind(this)} name="questionTextInModal" />
-
-
-
-
-                            </Modal.Body>
-                            <Modal.Footer>
-                                <Button variant="primary" onClick={this.handleFormSubmit}>
-                                    Submit
-                              </Button>
-                            </Modal.Footer>
-                        </Modal>
-
-
-
 
                     </Col>
                 </Row>

@@ -25,6 +25,9 @@ const QuestionnaireSchema = new Schema({
     questions: [{
         type: Schema.Types.ObjectId,
         ref: "Question"
+    }],
+    answerHistoryQuestionnaire: [{
+        type: Object
     }]
 });
 

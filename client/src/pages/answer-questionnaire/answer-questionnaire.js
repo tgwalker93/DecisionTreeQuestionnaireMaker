@@ -14,6 +14,7 @@ class AnswerQuestionnairePage extends Component {
             questionnaireName: "",
             test:"",
             questions: [],
+            answerHistoryQuestionnaire:[],
             errorResponse: null
         };
 
@@ -47,6 +48,7 @@ class AnswerQuestionnairePage extends Component {
                             this.setState({
                                 questionnaireData: response.data,
                                 questionnaireName: response.data.name,
+                                answerHistoryQuestionnaire: response.data.answerHistoryQuestionnaire,
                                 questions: response.data.questions
                             })
                         }
@@ -82,28 +84,36 @@ class AnswerQuestionnairePage extends Component {
 
         console.log("UPDATE QUESTIONS!!");
 
+        var answersArr = [];
         for(var i=0; i<this.state.questionnaireData.questions.length; i++){
             var currentQuestion = this.state.questionnaireData.questions[i];
             //Adding to the history of answers for a specific question!
             currentQuestion.answerHistory.push(this.state["answer"+currentQuestion.questionID]);
+            answersArr.push({
+                questionText: this.state.questionnaireData.questions[i].questionText,
+                questionAnswer: this.state["answer" + currentQuestion.questionID],
+                questionMongoID: this.state.questionnaireData.questions[i]._id,
+                questionID: this.state.questionnaireData.questions[i].questionID
+            })
         }
         this.state.questionnaireData["isFromAnswerQuestionnaire"] = true;
         this.state.questionnaireData["questionnaireMongoID"] = this.state.questionnaireData._id;
         this.state.questionnaireData["questionnaireName"] = this.state.questionnaireData.name;
+        this.state.questionnaireData["answerHistoryQuestionnaire"] = { answersArr };
         console.log(this.state.questionnaireData);
-        API.updateQuestionnaireInDB(this.state.questionnaireData)
+        API.updateQuestionnaireAnswersInDB(this.state.questionnaireData)
             .then(response => {
-                console.log("test 123");
                 console.log(response);
                 if (response.data) {
                     if(response.data.error){
                         return;
                     }
-                    this.setState({ 
-                        questionnaireData: response.data,
-                        questionnaireName: response.data.name,
-                        questions: response.data.questions
-                    });
+                    // this.setState({ 
+                    //     questionnaireData: response.data,
+                    //     questionnaireName: response.data.name,
+                    //     questions: response.data.questions
+                    // });
+                    this.getQuestionnaireFromDB();
                 } else {
                     this.setState({ errorResponse: response })
                 }

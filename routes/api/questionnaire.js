@@ -5,6 +5,7 @@ var app = express.Router();
 
 //Database Models 
 var Questionnaire = require("../../db/models/questionnaire.js");
+var Question = require("../../db/models/question.js");
 var User = require("../../db/models/user.js");
 
 //SAVE A Questionnaire
@@ -70,11 +71,78 @@ app.post("/saveQuestionnaire", function (req, res) {
 
 });
 
+//UPDATING Questionnaire Answers
+app.post("/updateQuestionnaireAnswers", function (req, res) {
+
+    var filter = {  };
+    var options = {
+    }
+
+    var update = {
+    };
+
+    var savedDocs = []; 
+
+
+
+    for(var i=0; i<req.body.questions.length; i++){
+        filter = { _id: req.body.questions[i]._id };
+         options = {
+            safe: true,
+            upsert: true
+        }
+
+         update = {
+            answerHistory: req.body.questions[i].answerHistory
+        };
+
+        Question
+            .findOneAndUpdate(filter, update, options)
+            .then(function (doc, error) {
+                // Log any errors
+                if (error) {
+                    console.log(error);
+                    res.json(error);
+                }
+                // Or send the doc to the browser as a json object
+                else {
+                    console.log("Looks like saving this questionnaire from backend was a pass!");
+                    console.log(doc);
+                    savedDocs.push(doc);
+                }
+            })
+            .catch(err => res.status(422).json(err));
+    }
+
+    Questionnaire.findOneAndUpdate({ "_id": req.body.questionnaireMongoID }, { $push: { "answerHistoryQuestionnaire": req.body.answerHistoryQuestionnaire } },
+        { safe: true, upsert: false })
+        // Execute the above query
+        .exec(function (err, doc) {
+
+
+            // Log any errors
+            if (err) {
+                console.log(err);
+                resultObj.error = true;
+                resultObj.errorObj = err;
+            }
+            else {
+                // Updating Organization was success, added new Organization DOc, and send back to client
+                console.log("adding history to questionnaire was a success!!");
+                savedDocs = doc;
+            }
+        });
+
+    res.json(savedDocs)
+
+
+});
+
 //UPDATING AN Questionnaire
 app.post("/updateQuestionnaire", function (req, res) {
 
-    let filter = { _id: req.body.questionnaireMongoID };
-    let options = {
+    var filter = { _id: req.body.questionnaireMongoID };
+    var options = {
         safe: true,
         upsert: false
     }
@@ -103,6 +171,30 @@ app.post("/updateQuestionnaire", function (req, res) {
         }
     }
 
+    if (req.body.isFromAnswerQuestionnaire) {
+
+        // Questionnaire.findOne({ "_id": req.body.questionnaireMongoID }).populate("questions")
+        //     .then(function (doc, error) {
+        //     if(error){
+        //         res.json(error);
+        //     }
+
+        //     console.log(doc.questions);
+            
+        //         for (var j = 0; j < doc.questions.length; j++){
+        //             for (var i = 0; i < req.body.questions.length; i++){
+        //                 if (req.body.questions[i]._id == doc.questions[j]._id){
+        //                     doc.questions[j].answerHistory = req.body.questions[i].answerHistory;
+        //                 }
+        //             }
+        //         }
+           
+        //     console.log("Did it work this time?");
+        //     doc.save();
+        //     res.json(doc);
+        // });
+    } else {
+
     Questionnaire
         .findOneAndUpdate(filter, update, options)
         .populate("questions")
@@ -116,22 +208,25 @@ app.post("/updateQuestionnaire", function (req, res) {
             else {
                 console.log("success?");
                 console.log(doc);
-                if (req.body.isFromAnswerQuestionnaire) {
-                    for(var i=0;i<req.body.questions.length;i++){
-                        doc.questions[req.body.questions[i].questionID].answerHistory = req.body.questions[i].answerHistory;
-                    }
-                     doc.save(function(err){
-                         if(!err){
-                             console.log("SUCCESS!!!!");
-                             res.json(doc);
-                         }
-                     })
-                } else {
-                    res.json(doc);
-                }
+                res.json(doc);
+                // if (req.body.isFromAnswerQuestionnaire) {
+                //     for(var i=0;i<req.body.questions.length;i++){
+                //         doc.questions[req.body.questions[i].questionID].answerHistory = req.body.questions[i].answerHistory;
+                //     }
+                //      doc.save(function(err){
+                //          if(!err){
+                //              console.log("SUCCESS!!!!");
+                //              res.json(doc);
+                //          }
+                //      })
+                // } else {
+                //     res.json(doc);
+                // }
             }
         })
         .catch(err => res.status(422).json(err));
+
+    }
 });
 
 //Get all questionnaires of a user object

@@ -56,6 +56,9 @@ export default {
     },
     updateQuestionnaireInDB: function(userData){
         return axios.post("/api/questionnaire/updateQuestionnaire", userData)
+    },
+    updateQuestionnaireAnswersInDB: function (userData) {
+        return axios.post("/api/questionnaire/updateQuestionnaireAnswers", userData)
     }
 
 };
