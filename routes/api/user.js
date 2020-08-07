@@ -87,8 +87,8 @@ app.post('/sendForgotPasswordEmail', (req, res, next) => {
                 //Below is the object the sendGrid expects when they draft an email
                 var emailObj = {
                     "from": {
-                        "email": "youmustloveslayingbugs@gmail.com",
-                        "name": "Tyler the Bug Slayer"
+                        "email": "decision.tree.questionnaire@gmail.com",
+                        "name": "Fellow Tree Maker"
                     },
                     "personalizations": [
                         {
@@ -103,7 +103,7 @@ app.post('/sendForgotPasswordEmail', (req, res, next) => {
                             }
                         }
                     ],
-                    "template_id": "d-cb6496ac0da343c2b9960b3037aaa9c3" 
+                    "template_id": "d-b44c853283254f0eb510488a33bef6e6" 
                 }
 
                 //Now we use axios to POST to the sendgrid API
