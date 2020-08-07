@@ -12,7 +12,7 @@ mongoose.set('useCreateIndex', true);
 
 // Connect to the Mongo DB
 if (process.env.MONGODB_URI) {
-    mongoose.connect("mongodb://heroku_lzkjf19m:sc8hocuhrd302v7i0i82er8k6@ds263248.mlab.com:63248/heroku_lzkjf19m", { useNewUrlParser: true});
+    mongoose.connect("mongodb://heroku_2r47w9mb:bl4efj2d6gl16gpim5hkktb08v@ds145146.mlab.com:45146/heroku_2r47w9mb", { useNewUrlParser: true});
     MONGO_URL = process.env.MONGODB_URI
 } else {
     mongoose.connect(MONGO_LOCAL_URL, { useNewUrlParser: true }) // local mongo url
