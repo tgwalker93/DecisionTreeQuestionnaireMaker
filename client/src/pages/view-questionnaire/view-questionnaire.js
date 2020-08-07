@@ -7,6 +7,34 @@ import { Link } from "react-router-dom";
 import Tree from 'react-d3-tree';
 import Modal from "react-bootstrap/Modal";
 
+class BinaryTree {
+    constructor(value) {
+        this.root = value;
+        this.left = null;
+        this.right = null;
+    }
+
+    insert(value) {
+        var queue = [];
+        queue.push(this); //push the root
+        while (true) {
+            var node = queue.pop();
+            if (node.left === null) {
+                node.left = new BinaryTree(value);
+                return;
+            } else {
+                queue.unshift(node.left)
+            }
+
+            if (node.right === null) {
+                node.right = new BinaryTree(value);
+                return;
+            } else {
+                queue.unshift(node.right)
+            }
+        }
+    }
+}
 
 class ViewQuestionnairePage extends Component {
     constructor(props) {
@@ -42,49 +70,59 @@ class ViewQuestionnairePage extends Component {
             isCurrentQuestionCompleted: false,
             treeData: [
                 {
-                    name: 'Top Level',
+                    name: 'Question 1',
                     attributes: {
-                        keyA: 'val A',
-                        keyB: 'val B',
-                        keyC: 'val C',
+                        TotalAnswers: 20
                     },
                     children: [
                         {
-                            name: 'Level 2: A',
+                            name: 'Question 2: No to 1',
                             attributes: {
-                                keyA: 'val A',
-                                keyB: 'val B',
-                                keyC: 'val C',
+                                probability: '50%',
+                                count: 10
+
                             },
                             children: [{
-                                name: 'Level 3: A',
+                                name: 'Leaf: No to 2',
                                 attributes: {
-                                    keyA: 'val A',
-                                    keyB: 'val B',
-                                    keyC: 'val C',
+                                    probability: '25%',
+                                    count: 5
                                 }
                             },
-                             {
-                                    name: 'Level 3: A',
-                                    attributes: {
-                                        keyA: 'val A',
-                                        keyB: 'val B',
-                                        keyC: 'val C',
-                                    }
+                            {
+                                name: 'Leaf: Yes to 2',
+                                attributes: {
+                                    probability: '25%',
+                                    count: 5
+                                }
                             },
-                        ]
+                            ]
                         },
                         {
-                            name: 'Level 2: B',
+                            name: 'Question 2: Yes to 1',
                             attributes: {
-                                keyA: 'val A',
-                                keyB: 'val B',
-                                keyC: 'val C',
+                                probability: '50%',
+                                count: 10
                             },
+                            children: [{
+                                name: 'Leaf: No to 2',
+                                attributes: {
+                                    probability: '25%',
+                                    count: 5
+                                }
+                            },
+                            {
+                                name: 'Leaf: Yes to 2',
+                                attributes: {
+                                    probability: '25%',
+                                    count: 5
+                                }
+                            },
+                            ]
                         },
                     ],
                 },
-            ]
+            ],
         };
 
     }
@@ -167,7 +205,7 @@ class ViewQuestionnairePage extends Component {
                     this.forceUpdate();
 
                     //Lastly, we create our decision tree!
-                    this.createDecisionTree(response.data.questionnaireDoc.answerHistoryQuestionnaire);
+                    //this.createDecisionTree(response.data.questionnaireDoc.answerHistoryQuestionnaire);
 
                 } else {
                     this.setState({ errorResponse: response })
@@ -229,9 +267,6 @@ class ViewQuestionnairePage extends Component {
             }
         }
 
-
-
-
         //Now that we have counts of all the registration paths taken, we want to loop through the keys and values and add approbability probability for EACH question.
 
         var probabilityKeys = Object.keys(probabilityData);
@@ -281,6 +316,7 @@ class ViewQuestionnairePage extends Component {
             }
 
                console.log(possiblePathsArr); 
+
                //NOW WE HAVE EACH POSSIBLE PATH FOR THE CURRENT QUESTION NOW WE COUNT
              //LOOP THROUGH EACH POSSIBLE KEY TO ADD THE YES, NO COUNT FOR CURRENT QUESTION
                 var correctPathCount = 0;
@@ -330,75 +366,119 @@ class ViewQuestionnairePage extends Component {
 
         var currentObjIndex = 0;
         var numberOfNestedChildren = treeChildrenObjArr.length / 2;
+
+        var fullBinaryTreeArray = [];
         //var childrenString = "finalTreeData['children']"
-        for (var z = 0; z < treeChildrenObjArr.length; z++){
-            //finalTreeData['children'] = treeChildrenObjArr[z];
-            var arrFromObj = Object.entries(currentObj);
-            var result = {};
-            var temp = result;
-   
-            temp = temp["children"] = [treeChildrenObjArr[z]];
-            currentObjIndex += 1;
 
 
-            finalTreeData[0].children = result;
 
+        //CREATING THE FULL BINARY TREE OBJECT ARRAY
+        var currentChildID = "0";
+        var currentParentID = 0;
+        var childCounter = 0;
+        var ifIsLeftID = false;
+        for (var c = 1; c < largestPossibleNumberOfQuestions; c++) {
+            var numberOfNodesAtCurrentLevel = Math.pow(2, c);
+            for (var d = 0; d < numberOfNodesAtCurrentLevel; d++){
 
-            //newObj.push(treeChildrenObjArr[z])
-            //childrenCount += 1;
-            // if(childrenCount === 2) {
-            //     //arrFromObj[currentObjIndex][1].push(treeChildrenObjArr[z]);
-            //     currentObjIndex += 1;
-            // } else {
-            //     //arrFromObj[currentObjIndex].push(treeChildrenObjArr[z])
-            // }
-            //HOW MANY CHILDREN THERE ARE IN THIS OBJECT
+                if(d % 2 !== 0){
+                    currentParentID = Math.floor(((c + d)+1)/2);
+                } else {
+                    currentParentID = Math.floor((c + d) / 2);
+                }
+                var newChildObj = {
+                        name: "Question " + c,
+                        attributes: {
+                        },
+                        "id": (c+d).toString(),
+                        "parentId": currentParentID.toString(),
+                        "text": "Man",
+                        "level": c.toString(),
+                        "children": null
+                    };
+                childCounter+= 1;
+                fullBinaryTreeArray.push(newChildObj);
+            }
         }
+
         console.log(finalTreeData);
 
+        //var finalTreeChildren = this.list_to_tree(fullBinaryTreeArray);
+
+
+
+
+        // var newFullBinaryTree = [];
+        // var currentPID = "0";
+        // var currentChildID = "0";
+        // var currentIDLength = 1;
+        // for (var e = 0; e < possiblePathsArr.length; e++) {
+        //     for (var f = possiblePathsArr[e].length; f > 0; f-=2) {
+        //         var newChildObj = {
+        //             name: "Question " + possiblePathsArr[e],
+        //             attributes: {
+        //             },
+        //             "id": possiblePathsArr[e].substring(0, f),
+        //             "parentId": possiblePathsArr[e].substring(0, f-2),
+        //             "text": "Man",
+        //             "level": e,
+        //             "children": null
+        //         };
+        //         var dupFound = false;
+        //         for(var g=0; g<newFullBinaryTree.length; g++){
+        //             if (newFullBinaryTree[g].id === newChildObj.id) {
+        //                 dupFound = true;
+        //             }
+        //         }
+        //         if(dupFound){
+        //             dupFound = false;
+        //         } else {
+        //             newFullBinaryTree.push(newChildObj);
+        //         }
+        //     }
+        // }
+
+        // newFullBinaryTree = this.list_to_tree(newFullBinaryTree);
+
+        // console.log("new full binary tree");
+        // console.log(newFullBinaryTree);
+
+
+       // finalTreeData[0] = finalTreeChildren;
+
         this.setState({
-            treeData: finalTreeData
+            treeData: this.state.TwoQTree
         })
 
 
+
+        
+
     }
 
-    addNewNode(d, item) {
-    item.forEach(function (i) {
-        if (d._children)
-            d._children.push(i)//will add child to the closed node      
-        else
-            d.children.push(i)//will add child to expanded node.
-    })
-}
+    list_to_tree(list) {
+    var map = {}, node, roots = [], i;
 
-    nestedLoop(obj) {
-    const res = {};
-    function recurse(obj, current) {
-        for (const key in obj) {
-            let value = obj[key];
-            if (value != undefined) {
-                if (value && typeof value === 'object') {
-                    recurse(value, key);
-                } else {
-                    // Do your stuff here to var value
-                    res[key] = value;
-                }
-            }
+    for (i = 0; i < list.length; i += 1) {
+        map[list[i].id] = i; // initialize the map
+        list[i].children = []; // initialize the children
+    }
+
+    for (i = 0; i < list.length; i += 1) {
+        node = list[i];
+        if (node.parentId !== "0") {
+            // if you have dangling branches check that map[node.parentId] exists
+            list[map[node.parentId]].children.push(node);
+        } else {
+            roots.push(node);
         }
     }
-    recurse(obj);
-    return res;
-    }
+    return roots;
+}
 
-    setNest(obj, level, val) {
-    if (level > 0) {
-        this.setNest(obj['children'], level - 1, val);
-    }
-    else {
-        obj.children = val;
-    }
-    }
+
+
+
 
    getLongestString(arr) { let longestStringArr = arr.sort((a, b) => a.length - b.length).reverse(); return longestStringArr[0]; }
 
