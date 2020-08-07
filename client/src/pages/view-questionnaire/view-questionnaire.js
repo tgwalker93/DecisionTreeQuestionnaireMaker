@@ -208,121 +208,199 @@ class ViewQuestionnairePage extends Component {
       }
       var probabilityData = {};
         var currentID = "";
-        var questionCount = 1;
         for (var i = 0; i < localAnswerHistoryQuestionnaire.length; i++) {
+            var questionCount = 0;
             for (var j = 0; j < localAnswerHistoryQuestionnaire[i].answersArr.length; j++){
-                currentID += (questionCount + localAnswerHistoryQuestionnaire[i].answersArr[j].questionAnswer)
+                currentID += (questionCount + localAnswerHistoryQuestionnaire[i].answersArr[j].questionAnswer.substring(0, 1))
+                questionCount += 1;
             }
+
+            //Add currentID to ProbabilityData, and then data to grab the next currentID
             if (probabilityData.hasOwnProperty(currentID)) {
                 probabilityData[currentID].count += 1;
+                currentID = "";
+                questionCount = 1;
             } else {
                 probabilityData[currentID] = {
                      count: 1,
                 }
+                currentID = "";
+                questionCount = 1;
             }
         }
 
+
+
+
+        //Now that we have counts of all the registration paths taken, we want to loop through the keys and values and add approbability probability for EACH question.
 
         var probabilityKeys = Object.keys(probabilityData);
         var probabilityValues = Object.values(probabilityData);
         var currentYesCount = 0;
-        var currentNoCount = 0;
-        var current1YesString = "1Yes";
-        var current1NoString = "1No";
 
-        for (var x = 0; x < probabilityKeys.length; x++){
-            if (probabilityKeys[x].includes(current1YesString)) {
-                currentYesCount += 1;
-            }
-            if (probabilityKeys[x].includes(current1NoString)){
-                currentNoCount += 1;
-            }
+        var currentYesAndNoCount = 0;
+
+        var treeChildrenObjArr = [];
+        //Grab the largest path of questions 
+        var largestPathTaken = this.getLongestString(probabilityKeys);
+
+        var largestPossibleNumberOfQuestions = largestPathTaken.length/2;
+        if(largestPossibleNumberOfQuestions<1){
+            largestPossibleNumberOfQuestions = 1;
         }
 
-        if (localAnswerHistoryQuestionnaire){
-            newTreeData[0] = {
-                name: localAnswerHistoryQuestionnaire[0].answersArr[0].questionText,
-                attributes: {
-                    Yes: currentYesCount,
-                    No: currentNoCount,
-                    // YesProbability: currentYesCount / (localAnswerHistoryQuestionnaire[0].answersArr.length)*100+"%",
-                    // NoProbability: currentNoCount / (localAnswerHistoryQuestionnaire[0].answersArr.length)*100+"%",
-                },
-                children: [
+        //Iterate for EACH qestion will have ATLEAST one node in the tree
+        for (var m = 0; m < largestPossibleNumberOfQuestions+1; m++){
 
-                ],
-            };
-        }
-
-        var treeDepth = 1;
-        var currentDataTree = newTreeData[0];
-        var howManyQuestionsThereAre = localAnswerHistoryQuestionnaire[0].answersArr.length;
-        var currentCount = 1;
-        var currentIDString = "";
-        var currentChild = "newTreeData[0].children";
-        for (var k = 1; k < howManyQuestionsThereAre; k++) {
-            treeDepth = treeDepth * 2;
-            for (var l = 0; l < treeDepth; l++) {
-                currentIDString += currentCount + localAnswerHistoryQuestionnaire[k].answersArr[l].questionAnswer;
-
-            }
-
-            if (probabilityKeys.includes(currentIDString)) {
-
-                var totalCount = 0;
-                var totalStringCount = currentIDString.length;
-                for (var x = 0; x < probabilityKeys.length; x++) {
-                    if (probabilityKeys[x].length <= totalStringCount) {
-                        totalCount += 1;
+            var totalPossiblePathsWithCurrentQuestion = Math.pow(2, m);
+            var possiblePathsArr = [];
+            var yes = true;
+            var howLargeTheStringOfPathsAre = m;
+            if (totalPossiblePathsWithCurrentQuestion !== 1) {
+            //FOR EACH NODE OF THE SAME QUESTION, N IS THE CURRENT CURRENT PATH
+                for(var n=0; n<totalPossiblePathsWithCurrentQuestion; n++){
+                    var stringInPossiblePathsArrExists = true;
+                    while(stringInPossiblePathsArrExists){
+                        var newPathAttempt = "";
+                        //ADD EVERY PREVIOUS CHOICE OF CURRENT PATH
+                        for (var o = 0; o < howLargeTheStringOfPathsAre; o++) {
+                            if (Math.random() < 0.5) {
+                                newPathAttempt += o + "Y";
+                            } else {
+                                newPathAttempt += o + "N";
+                            }
+                        }
+                    if (!possiblePathsArr.includes(newPathAttempt)) {
+                        //THIS PATH DOESNT EXIST, SUCCESSFUL CREATION OF PATH
+                        possiblePathsArr.push(newPathAttempt);
+                        stringInPossiblePathsArrExists = false;
                     }
-                    
+
+                    }
+                }
+            }
+
+               console.log(possiblePathsArr); 
+               //NOW WE HAVE EACH POSSIBLE PATH FOR THE CURRENT QUESTION NOW WE COUNT
+             //LOOP THROUGH EACH POSSIBLE KEY TO ADD THE YES, NO COUNT FOR CURRENT QUESTION
+                var correctPathCount = 0;
+                var otherPathCount = 0;
+                for(var y=0; y<possiblePathsArr.length; y++){
+                    for (var x = 0; x < probabilityKeys.length; x++) {
+                        if (probabilityKeys[x].includes(possiblePathsArr[y])) {
+                            correctPathCount += probabilityValues[x].count;
+                        } else {
+                            otherPathCount += probabilityValues[x].count;
+                        }
+                    } 
+                    //NOW THAT WE HAVE ALL THE COUNTS WE WANT TO EDIT THE TREE
+                 var newNode = {
+                     name: "test",
+                    attributes: {
+                            ChoseThisPath: correctPathCount,
+                            ChoseOtherPath: otherPathCount,
+                            Probability: correctPathCount / (correctPathCount + otherPathCount) * 100 + "%",
+                        },
+                        children: [
+
+                        ],
+                    };
+
+                    treeChildrenObjArr.push(newNode); 
+
                 }
                 
-                eval(currentChild).push({
-                    name: localAnswerHistoryQuestionnaire[0].answersArr[0].questionText,
-                    attributes: {
-                        Yes: 0,
-                        No: 0,
-                        probability: probabilityValues[probabilityKeys.indexOf[currentIDString]].count / (totalCount) * 100 + "%",
-                    },
-                    children: [
 
-                    ],
-                })
-
-               currentChild += "["+l+"].currentChild";
-                
-            }
         }
 
+        //NOW WE WANT TO LOOP THROUGH EVERY CHILD AND ADD THE PROPER CHILD
+        var finalTreeData = [
+            {
+                name: "Test",
+                attributes: {
+                    },
+                children: [
+                    ],
+            }
+        ]
+
+        var currentObj = finalTreeData[0];
+
+        var childrenCount =1;
+
+        var currentObjIndex = 0;
+        var numberOfNestedChildren = treeChildrenObjArr.length / 2;
+        //var childrenString = "finalTreeData['children']"
+        for (var z = 0; z < treeChildrenObjArr.length; z++){
+            //finalTreeData['children'] = treeChildrenObjArr[z];
+            var arrFromObj = Object.entries(currentObj);
+            var result = {};
+            var temp = result;
+   
+            temp = temp["children"] = [treeChildrenObjArr[z]];
+            currentObjIndex += 1;
+
+
+            finalTreeData[0].children = result;
+
+
+            //newObj.push(treeChildrenObjArr[z])
+            //childrenCount += 1;
+            // if(childrenCount === 2) {
+            //     //arrFromObj[currentObjIndex][1].push(treeChildrenObjArr[z]);
+            //     currentObjIndex += 1;
+            // } else {
+            //     //arrFromObj[currentObjIndex].push(treeChildrenObjArr[z])
+            // }
+            //HOW MANY CHILDREN THERE ARE IN THIS OBJECT
+        }
+        console.log(finalTreeData);
 
         this.setState({
-            treeData: newTreeData
+            treeData: finalTreeData
         })
 
 
-
-    //   for (var i = 0; i < questions.length; i++) {
-    //       probabilityData[i].push({
-    //           questionText: questions[i].questionText,
-    //           yesCount: 0,
-    //           noCount: 0          
-    //         });
-    //         for(var j=0; j< questions[i].answerHistory.length; j++){
-    //             if (questions[i].answerHistory[j] = "Yes"){
-    //                 probabilityData[i].yesCount += 1;
-    //             } 
-    //             if(questions[i].answerHistory[j] = "No"){
-    //                 probabilityData[i].noCount += 1;
-    //             }
-    //         }
-    //     }
-
     }
 
-    calculateYesCount(){
+    addNewNode(d, item) {
+    item.forEach(function (i) {
+        if (d._children)
+            d._children.push(i)//will add child to the closed node      
+        else
+            d.children.push(i)//will add child to expanded node.
+    })
+}
 
+    nestedLoop(obj) {
+    const res = {};
+    function recurse(obj, current) {
+        for (const key in obj) {
+            let value = obj[key];
+            if (value != undefined) {
+                if (value && typeof value === 'object') {
+                    recurse(value, key);
+                } else {
+                    // Do your stuff here to var value
+                    res[key] = value;
+                }
+            }
+        }
     }
+    recurse(obj);
+    return res;
+    }
+
+    setNest(obj, level, val) {
+    if (level > 0) {
+        this.setNest(obj['children'], level - 1, val);
+    }
+    else {
+        obj.children = val;
+    }
+    }
+
+   getLongestString(arr) { let longestStringArr = arr.sort((a, b) => a.length - b.length).reverse(); return longestStringArr[0]; }
 
     closeModal = () => {
         this.setState({
@@ -422,7 +500,7 @@ class ViewQuestionnairePage extends Component {
 
                         </Row>
 
-                        <div id="treeWrapper" style={{ width: '50em', height: '50em' }}>
+                        <div id="treeWrapper" style={{ width: '100em', height: '50em' }}>
 
                             <Tree data={this.state.treeData} orientation="vertical"/>
 
