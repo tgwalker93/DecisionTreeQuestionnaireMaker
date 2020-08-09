@@ -334,7 +334,7 @@ class ViewQuestionnairePage extends Component {
                     }
                     //NOW THAT WE HAVE ALL THE COUNTS WE WANT TO EDIT THE TREE
                  var newNode = {
-                     name: "Question" + m,
+                     name: "Question" + m + " - " + currentAnswer,
                      "ID": currentID,
                      "parentID": currentParentID,
                      "level": m.toString(),
