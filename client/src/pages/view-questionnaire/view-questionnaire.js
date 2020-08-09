@@ -216,30 +216,6 @@ class ViewQuestionnairePage extends Component {
 
     createDecisionTree(localAnswerHistoryQuestionnaire) {
 
-    
-    var newTreeData = [
-             {
-            //     name: 'Top Level',
-            //     attributes: {
-            //         keyA: 'val A',
-            //         keyB: 'val B',
-            //         keyC: 'val C',
-            //     },
-            //     children: [
-            //         {
-            //             name: 'Level 2: A',
-            //             attributes: {
-            //                 keyA: 'val A',
-            //                 keyB: 'val B',
-            //                 keyC: 'val C',
-            //             },
-            //         },
-            //         {
-            //             name: 'Level 2: B',
-            //         },
-            //     ],
-             }
-        ]
 
       if(!localAnswerHistoryQuestionnaire){
           return;
@@ -271,22 +247,20 @@ class ViewQuestionnairePage extends Component {
 
         var probabilityKeys = Object.keys(probabilityData);
         var probabilityValues = Object.values(probabilityData);
-        var currentYesCount = 0;
-
-        var currentYesAndNoCount = 0;
 
         var treeChildrenObjArr = [];
         var finalTreeData = 
             {
-                name: "Test",
+                name: this.state.questionnaireNameInTitle,
                 "ID": "0",
                 "level": "0",
                 attributes: {
+                    TotalAnswers: localAnswerHistoryQuestionnaire.length
                 },
                 children: [
                 ],
             }
-        
+        var currentParentID = 0;
         treeChildrenObjArr.push(finalTreeData);
         //Grab the largest path of questions 
         var largestPathTaken = this.getLongestString(probabilityKeys);
@@ -331,9 +305,9 @@ class ViewQuestionnairePage extends Component {
 
                //NOW WE HAVE EACH POSSIBLE PATH FOR THE CURRENT QUESTION NOW WE COUNT
              //LOOP THROUGH EACH POSSIBLE KEY TO ADD THE YES, NO COUNT FOR CURRENT QUESTION
-                var correctPathCount = 0;
-                var otherPathCount = 0;
                 for(var y=0; y<possiblePathsArr.length; y++){
+                    var correctPathCount = 0;
+                    var otherPathCount = 0;
                     for (var x = 0; x < probabilityKeys.length; x++) {
                         if (probabilityKeys[x].includes(possiblePathsArr[y])) {
                             correctPathCount += probabilityValues[x].count;
@@ -350,16 +324,25 @@ class ViewQuestionnairePage extends Component {
                     if(m===1){
                         currentParentID = possiblePathsArr[y].substring(0, possiblePathsArr[y].length - 1)
                     }
+                    
+                    var currentAnswer = possiblePathsArr[y].substring(possiblePathsArr[y].length - 1, possiblePathsArr[y].length);
+                    if (currentAnswer ==="Y") {
+                        currentAnswer = "Yes";
+                    }
+                    if(currentAnswer === "N"){
+                        currentAnswer = "No";
+                    }
                     //NOW THAT WE HAVE ALL THE COUNTS WE WANT TO EDIT THE TREE
                  var newNode = {
-                     name: "test" + y,
+                     name: "Question" + m,
                      "ID": currentID,
                      "parentID": currentParentID,
                      "level": m.toString(),
                     attributes: {
                             ChoseThisPath: correctPathCount,
                             ChoseOtherPath: otherPathCount,
-                            Probability: correctPathCount / (correctPathCount + otherPathCount) * 100 + "%",
+                            Answer: currentAnswer,
+                            Probability: "~ " + Math.trunc(correctPathCount / (correctPathCount + otherPathCount) * 100) + "%",
                         },
                         children: null,
                     };
@@ -371,103 +354,7 @@ class ViewQuestionnairePage extends Component {
 
         }
 
-        //NOW WE WANT TO LOOP THROUGH EVERY CHILD AND ADD THE PROPER CHILD
-        // var finalTreeData = [
-        //     {
-        //         name: "Test",
-        //         "id": "0",
-        //         "parentId": "0",
-        //         "level": m.toString(),
-        //         attributes: {
-        //             },
-        //         children: [
-        //             ],
-        //     }
-        // ]
-
-        var currentObj = finalTreeData[0];
-
-        var childrenCount =1;
-
-        var currentObjIndex = 0;
-        var numberOfNestedChildren = treeChildrenObjArr.length / 2;
-
-        var fullBinaryTreeArray = [];
-        //var childrenString = "finalTreeData['children']"
-
-
-
-        //CREATING THE FULL BINARY TREE OBJECT ARRAY
-        var currentChildID = "0";
-        var currentParentID = 0;
-        var childCounter = 0;
-        var ifIsLeftID = false;
-        // for (var c = 1; c < largestPossibleNumberOfQuestions; c++) {
-        //     var numberOfNodesAtCurrentLevel = Math.pow(2, c);
-        //     for (var d = 0; d < numberOfNodesAtCurrentLevel; d++){
-
-        //         if(d % 2 !== 0){
-        //             currentParentID = Math.floor(((c + d)+1)/2);
-        //         } else {
-        //             currentParentID = Math.floor((c + d) / 2);
-        //         }
-        //         var newChildObj = {
-        //                 name: "Question " + c,
-        //                 attributes: {
-        //                 },
-        //                 "id": (c+d).toString(),
-        //                 "parentId": currentParentID.toString(),
-        //                 "text": "Man",
-        //                 "level": c.toString(),
-        //                 "children": null
-        //             };
-        //         childCounter+= 1;
-        //         fullBinaryTreeArray.push(newChildObj);
-        //     }
-        // }
-
         var finalTreeChildren = this.createDataTree(treeChildrenObjArr);
-
-
-
-
-        // var newFullBinaryTree = [];
-        // var currentPID = "0";
-        // var currentChildID = "0";
-        // var currentIDLength = 1;
-        // for (var e = 0; e < possiblePathsArr.length; e++) {
-        //     for (var f = possiblePathsArr[e].length; f > 0; f-=2) {
-        //         var newChildObj = {
-        //             name: "Question " + possiblePathsArr[e],
-        //             attributes: {
-        //             },
-        //             "id": possiblePathsArr[e].substring(0, f),
-        //             "parentId": possiblePathsArr[e].substring(0, f-2),
-        //             "text": "Man",
-        //             "level": e,
-        //             "children": null
-        //         };
-        //         var dupFound = false;
-        //         for(var g=0; g<newFullBinaryTree.length; g++){
-        //             if (newFullBinaryTree[g].id === newChildObj.id) {
-        //                 dupFound = true;
-        //             }
-        //         }
-        //         if(dupFound){
-        //             dupFound = false;
-        //         } else {
-        //             newFullBinaryTree.push(newChildObj);
-        //         }
-        //     }
-        // }
-
-        // newFullBinaryTree = this.list_to_tree(newFullBinaryTree);
-
-        // console.log("new full binary tree");
-        // console.log(newFullBinaryTree);
-
-
-       // finalTreeData[0] = finalTreeChildren;
 
         this.setState({
             treeData: finalTreeChildren
